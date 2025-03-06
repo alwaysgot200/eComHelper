@@ -1,0 +1,22 @@
+.pricetable,.mytable {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .pricetable th,
+  .pricetable td,
+  .mytable th,
+  .mytable td  {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .pricetable th,.mytable th {
+    background-color: #f2f2f2;
+  }
+  
+  .pricetable tr:nth-child,.mytable tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  

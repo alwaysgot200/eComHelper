@@ -1,0 +1,44 @@
+{
+   "action": {
+      "default_icon": "img/icon48.png",
+      "default_popup": "popup.htm",
+      "default_title": "跨境电商助手"
+   },
+   "author": "topway.wu",
+   "background": {
+      "service_worker": "background.js"
+   },
+   "content_scripts": [ {
+      "all_frames": false,
+      "css": [ "asset/lib/my.css" ],
+      "js": [ "asset/lib/jquery.min.js", "content.js", "inventoryManager.js", "batchShippingProcessor.js" ],
+      "matches": [ "https://kuajing.pinduoduo.com/*","https://seller.kuajingmaihuo.com/*" ]
+   } ], 
+   "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src * data: blob: 'self'",
+      "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self'"
+   },
+    "host_permissions": [      
+      "https://*.kuajingmaihuo.com/*",
+      "https://*.kuajingboss.com/*",
+      "https://*.pinduoduo.com/*"     
+    ],
+   "description": "跨境电商助手",
+   "externally_connectable": {
+      "matches": [ "*://*.kuajing.pinduoduo.com/*", "*://*.seller.kuajingmaihuo.com/*" ]
+   },
+   "icons": {
+      "128": "img/icon128.png",
+      "16": "img/icon16.png",
+      "48": "img/icon48.png"
+   }, 
+   "manifest_version": 3,
+   "name": "跨境电商助手",
+   "permissions": [ "webRequest", "unlimitedStorage", "storage", "notifications" ],
+   "short_name": "eComHelper",
+   "version": "1.0.0",
+   "web_accessible_resources": [ {
+      "matches": [ "*://*/*" ],
+      "resources": ["templates/*","img/qr.jpg", "img/wechat.jpg", "img/gzh.jpg", "img/wechat22.jpg", "img/gzh2.jpg", "yiyi.mp3" ]
+   } ]
+}
