@@ -1,9 +1,3 @@
-// 订单相关状态
-// 订单数据
-let wbid = { joinDeliveryPlatformRequestList: [] };
-let wbidv2 = { subPurchaseOrderSn: "WB230807922220" };
-let wbidv2tmp;
-
 // 商家和认证信息
 let mallid;
 let AntiContent;
@@ -14,8 +8,8 @@ let isLoopingv2 = false;
 
 // 配置参数
 let singleOrderLoopv2 = 3;
-let shiyan = 100;
-let shiyan2 = 6000;
+let shiyan = 1200;
+let shiyan2 = 2000;
 let _MyInterval = null;
 let isstip = false;
 let onlyClickSelected = false;
@@ -258,343 +252,23 @@ function addApivButton() {
     }),
     // 暴力+100抢库按钮点击事件
     $(document).on("click", ".apivStockv3", function () {
-      console.log("apivStockv3 button clicked"); // 添加调试信息
-
       // 如果定时器正在运行，则停止
       if (_MyInterval) {
         clearInterval(_MyInterval);
         _MyInterval = null;
         $(".apivStockv3").html("<span>暴力<SUP>+100</SUP>抢库</span>");
-        console.log("Interval stopped"); // 添加调试信息
         return;
       }
       // 启动定时器开始抢库
       _MyInterval = setInterval(run, shiyanr());
       $(".apivStockv3").html("停止<span>暴力<SUP>+100</SUP>抢库</span>");
-      console.log("Interval started"); // 添加调试信息
-    }),
-    // 暴力抢库按钮点击事件
-    $(document).on("click", ".apivStock", function () {
-      // 检查任务状态
-      if (isLooping || isLoopingv2) {
-        alert("已有任务运行中");
-        return false;
-      }
-      // 设置运行状态
-      isLooping = true;
-      // 获取所有备货单
-      const orderElements = $(".TB_body_5-72-0")
-        .find("div[style*='line-height: 12px;']")
-        .clone();
-      // 检查是否存在可操作订单
-      if (orderElements.length === 0) {
-        isLooping = false;
-        alert("没有可操作的备货单");
-        return false;
-      }
-      // 初始化并收集订单号
-      wbid.joinDeliveryPlatformRequestList = [];
-      orderElements.each(function () {
-        const $element = $(this);
-        $element.find("span").remove();
-        const orderNumber = trim($element.text(), true);
-
-        if (orderNumber) {
-          wbid.joinDeliveryPlatformRequestList.push({
-            subPurchaseOrderSn: orderNumber,
-          });
-        }
-      });
-      // 添加操作面板并开始执行抢库
-      addintpod();
-      asyncLoop();
-    }),
-    // 暴力+1抢库按钮点击事件
-    $(document).on("click", ".apivStockv2", function () {
-      // 检查任务状态
-      if (isLooping || isLoopingv2) {
-        alert("已有任务运行中");
-        return false;
-      }
-      // 初始化状态和数据
-      isLoopingv2 = true;
-      wbidv2 = [];
-      // 获取所有订单行
-      const orderRows = $(".TB_tableWrapper_5-72-0").find("tr");
-      const checkedOrders = $(".TB_tableWrapper_5-72-0")
-        .find("tbody")
-        .find("input:checked");
-      // 验证可操作订单
-      if (orderRows.length === 0) {
-        isLoopingv2 = false;
-        alert("没有可操作的备货单");
-        return false;
-      }
-      if (checkedOrders.length === 0) {
-        isLoopingv2 = false;
-        alert("请先选中要操作的发货单");
-        return false;
-      }
-      // 收集选中的订单
-      orderRows.each(function (index) {
-        const $row = $(this);
-        const checkbox = $row.find("input[type='checkbox']");
-        const addButton = $row.find("a:contains('加入发货台')");
-        if (
-          checkbox.is(":checked") &&
-          addButton.attr("disabled") !== "disabled"
-        ) {
-          const orderCell = $row.find("div[style*='line-height: 12px;']");
-          orderCell.find("span").remove();
-          const orderNumber = trim(orderCell.text(), true);
-          if (orderNumber) {
-            // 每个订单重复指定次数添加到队列
-            for (let i = 0; i < singleOrderLoopv2; i++) {
-              wbidv2.push({ subPurchaseOrderSn: orderNumber });
-            }
-          }
-        }
-      });
-      // 保存临时数据并检查是否有可执行订单
-      wbidv2tmp = wbidv2;
-      if (wbidv2.length === 0) {
-        isLoopingv2 = false;
-        alert("没有可操作的备货单");
-        return false;
-      }
-      // 开始执行抢库
-      addintpod();
-      asyncLoopv2();
     });
 }
 // 延迟函数，返回Promise
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-// 批量抢库主循环
-async function asyncLoop() {
-  isLooping = true;
-  const MAX_ATTEMPTS = 1e7;
-  const API_URL =
-    "https://kuajing.pinduoduo.com/oms/bg/venom/api/supplier/purchase/manager/batchJoinDeliveryOrderPlatformV2";
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    // 检查是否需要停止
-    if (!isLooping) {
-      inw("已停止");
-      break;
-    }
-    try {
-      // 发送批量加入发货台请求
-      const response = await fetch(API_URL, {
-        headers: {
-          accept: "*/*",
-          "accept-language": "zh-CN,zh;q=0.9",
-          "anti-content": "",
-          "cache-control": "max-age=0",
-          "content-type": "application/json",
-          mallid: mallid,
-          "Anti-Content": AntiContent,
-          "sec-ch-ua":
-            '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"Windows"',
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "same-origin",
-        },
-        referrer: "https://kuajing.pinduoduo.com/main/order-manage",
-        referrerPolicy: "strict-origin-when-cross-origin",
-        body: JSON.stringify(wbid),
-        method: "POST",
-        mode: "cors",
-        credentials: "include",
-      });
-      if (!response.ok) {
-        inw(`请求失败: ${response.status}`);
-        continue;
-      }
-      const data = await response.json();
-      console.log(data.result);
-
-      // 处理响应结果
-      await handleResponse(data);
-    } catch (error) {
-      inw(`请求异常: ${error}`);
-    }
-
-    // 等待随机时间后继续
-    const delay_time = shiyanr();
-    await delay(delay_time);
-  }
-}
-
-// 处理API响应
-async function handleResponse(data) {
-  // 无错误信息时的处理
-  if (data.errorMsg === null) {
-    if (data.result.isSuccess) {
-      // 成功情况
-      inw("多多返回成功指令,验证中");
-      if (isstip) {
-        playSound();
-      }
-      sendNotification("完成", "多多返回成功指令,验证中");
-      return;
-    }
-
-    if (data.error_msg) {
-      // 有错误消息
-      inw(`继续抢库中\r\n${data.error_msg}`);
-      return;
-    }
-    // 处理错误信息列表
-    await handleErrorInfoList(data.result.errorInfoList);
-    return;
-  }
-  // 有错误信息时的处理
-  if (data.error_msg) {
-    inw(`继续抢库中\r\n${data.error_msg}`);
-  }
-  if (data.errorMsg) {
-    inw(`继续抢库中\r\n${data.errorMsg}`);
-  }
-}
-// 处理错误信息列表
-async function handleErrorInfoList(errorInfoList) {
-  if (!errorInfoList || errorInfoList.length === 0) return;
-
-  let successCount = 0;
-  let errorMessages = [];
-
-  // 收集错误信息
-  errorInfoList.forEach((error) => {
-    if (error.errorMsg.includes("已加入发货台")) {
-      successCount++;
-    }
-    errorMessages.push(`${error.id}:${error.errorMsg}`);
-  });
-
-  const messageText = errorMessages.join(";");
-
-  // 检查是否全部完成
-  if (errorInfoList.length === successCount) {
-    isLooping = false;
-    inw(`全部订单已加入发货台，请尽快创建发货单。\r\n${messageText}`);
-    if (isstip) {
-      playSound();
-    }
-    sendNotification("完成", "全部订单已加入发货台，请尽快创建发货单");
-  } else {
-    inw(`继续抢库中\r\n${messageText}`);
-  }
-}
-
-// 单个商品抢库循环
-async function asyncLoopv2() {
-  const API_URL =
-    "https://kuajing.pinduoduo.com/oms/bg/venom/api/supplier/purchase/manager/joinDeliveryGoodsOrderPlatform";
-  if (!isLoopingv2) {
-    inw("已停止");
-    return;
-  }
-  for (let i = 0; i < wbidv2.length; i++) {
-    // 检查是否需要停止
-    if (!isLoopingv2) {
-      inw("已停止");
-      break;
-    }
-    try {
-      // 发送单个商品加入发货台请求
-      const response = await fetch(API_URL, {
-        headers: {
-          accept: "*/*",
-          "accept-language": "zh-CN,zh;q=0.9",
-          "anti-content": AntiContent,
-          "cache-control": "max-age=0",
-          "content-type": "application/json",
-          mallid: mallid,
-          "sec-ch-ua":
-            '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"Windows"',
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "same-origin",
-        },
-        referrer: "https://kuajing.pinduoduo.com/main/order-manage",
-        referrerPolicy: "strict-origin-when-cross-origin",
-        body: JSON.stringify(wbidv2[i]),
-        method: "POST",
-        mode: "cors",
-        credentials: "include",
-      });
-      if (!response.ok) {
-        inw(`请求失败: ${response.status}`);
-        continue;
-      }
-      // 处理响应
-      const data = await response.json();
-      console.log(data);
-      await handleSingleOrderResponse(data, wbidv2[i].subPurchaseOrderSn);
-    } catch (error) {
-      inw(`请求异常: ${error}`);
-    }
-    // 等待随机时间后继续
-    await delay(shiyanr());
-    // 检查是否完成所有订单
-    if (i === wbidv2.length - 1) {
-      if (wbidv2tmp.length === 0) {
-        handleAllOrdersComplete();
-      }
-      asyncLoopv2();
-    }
-  }
-}
-
-// 处理单个订单响应
-async function handleSingleOrderResponse(data, orderSn) {
-  if (data.errorMsg === null && data.success) {
-    // 成功处理
-    handleOrderSuccess(orderSn);
-    return;
-  }
-  if (data.errorMsg) {
-    // 错误处理
-    handleOrderError(data.errorMsg, orderSn);
-  }
-  if (data.error_msg) {
-    inw(`继续抢库中\r\n${orderSn}:${data.error_msg}`);
-  }
-}
-// 处理订单成功
-function handleOrderSuccess(orderSn) {
-  inw(`继续抢库中\r\n${orderSn}:多多返回成功指令,请以实际为准`);
-  wbidv2tmp = wbidv2tmp.filter((item) => item.subPurchaseOrderSn !== orderSn);
-
-  if (isstip) {
-    playSound();
-  }
-  sendNotification("完成", "多多返回成功指令,请以实际为准");
-}
-// 处理订单错误
-function handleOrderError(errorMsg, orderSn) {
-  inw(`继续抢库中\r\n${orderSn}:${errorMsg}`);
-
-  const errorTypes = ["已加入发货台", "不能加入发货台", "不允许加入发货台"];
-  if (errorTypes.some((type) => errorMsg.includes(type))) {
-    wbidv2tmp = wbidv2tmp.filter((item) => item.subPurchaseOrderSn !== orderSn);
-  }
-}
-// 处理所有订单完成
-function handleAllOrdersComplete() {
-  inw("已全部完成");
-  if (isstip) {
-    playSound();
-  }
-  sendNotification("完成", "已全部完成");
-  isLoopingv2 = false;
-}
 function getMallid(callback) {
   chrome.runtime.sendMessage(
     { action: "getMallid" },

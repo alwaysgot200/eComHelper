@@ -7,7 +7,7 @@ function run() {
     .querySelectorAll("a:not([disabled])");
   // 筛选符合条件的按钮
   for (const link of links) {
-    if (link.innerText === "加入发货台") {
+    if (link.innerText === "加入发货台" && link.attr("disabled") !== "disabled") {
       if (onlyClickSelected) {
         let checkbox;
         let currentRow = link.closest("tr");
@@ -25,7 +25,6 @@ function run() {
       }
     }
   }
-
   // 执行加入发货台操作
     (async function processButtons() {
     //const checkboxStates = saveCheckboxStates(); // 保存初始checkbox状态
