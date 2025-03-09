@@ -7,7 +7,7 @@ function run() {
     .querySelectorAll("a:not([disabled])");
   // 筛选符合条件的按钮
   for (const link of links) {
-    if (link.innerText === "加入发货台" && link.attr("disabled") !== "disabled") {
+    if (link.innerText === "加入发货台" ){
       if (onlyClickSelected) {
         let checkbox;
         let currentRow = link.closest("tr");

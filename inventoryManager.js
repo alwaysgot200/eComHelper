@@ -74,9 +74,10 @@ function addApivButton() {
       // 点击所有符合条件的第一步按钮"
       var portalElements = $('div[class^="RD_textWrapper"]').filter(
         function () {
-          return $(this).text().includes("我不接受");
+          return $(this).text().includes("我不接受") || $(this).text().includes("放弃") || $(this).text().includes("不参与") ;
         }
-      );
+      );       
+
       if (portalElements.length > 0) {
         // 使用jQuery正确处理每个元素
         portalElements.each(function () {
@@ -110,31 +111,14 @@ function addApivButton() {
             }, 300);
           }
         });
-      } else {
-        //另一种情况
-        var radioElements = $(
-          'div.RD_textWrapper_5-114-0.RD_prevRadio_5-114-0:contains("放弃活动")'
-        );
-        // Using jQuery properly for each radio element
-        radioElements.each(function () {
-          const $radio = $(this);
-          const $tr = $radio.closest("tr");
-          // 使用filter方法精确匹配包含"日常价格"的<span>
-          const hasNomalPrice =
-            $tr.find("span").filter(function () {
-              return $(this).text().trim() === "日常价格";
-            }).length > 0;
-          if (hasNomalPrice) {
-            $portal.click();
-          }
-        });
-      }
+      } 
     }),
     //一键拒绝价格调整功能
     $(document).on("click", ".oneKeyRejectPrice", function () {
       // 点击所有符合条件的按钮
       const selectors = [
-        "div.RD_textWrapper_5-114-0.RD_prevRadio_5-114-0:contains('放弃活动')",
+        "div.RD_textWrapper_5-114-0.RD_prevRadio_5-114-0:contains('放弃')",
+        "div.RD_textWrapper_5-114-0.RD_prevRadio_5-114-0:contains('不参与')",
         "div[class^='RD_textWrapper']:contains('我不接受')",
         "div[class^='CBX_textWrapper_5']:contains('我已知晓风险，本次不再提醒')",
         "button[class^='BTN_outerWrapper_']:contains('拒绝接受价格调整建议')"
