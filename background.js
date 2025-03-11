@@ -58,7 +58,7 @@ async function initializeStorage() {
 
     const defaults = {
       shiyan: 1500,
-      shiyan2: 2500,
+      shiyan2: 3000,
       isstip: false,
       onlyClickSelected: false
     };

@@ -8,7 +8,7 @@ let isLoopingv2 = false;
 
 // 配置参数
 let shiyan = 1500;
-let shiyan2 = 2500;
+let shiyan2 = 3000;
 let _MyInterval = null;
 let isstip = false;
 let onlyClickSelected = false;
@@ -401,14 +401,15 @@ function run() {
     }
     await delay(100);
     await handleModals();//处理不点击按钮时的弹窗
+    await delay(100);
+      // 处理无可用订单的情况
+    if (addToShipButtons.length === 0) {
+      alert("没找到可用的加入发货台订单");
+      clearInterval(_MyInterval);
+      _MyInterval = null;
+      $(".apivStockv3").html("<span>暴力<sup>+100</sup>抢库</span>");
+    }
   })(); 
-  // 处理无可用订单的情况
-  if (addToShipButtons.length === 0) {
-    alert("没找到可用的加入发货台订单");
-    clearInterval(_MyInterval);
-    _MyInterval = null;
-    $(".apivStockv3").html("<span>暴力<sup>+100</sup>抢库</span>");
-  }
 }
 async function handleModals() {
   // 处理"继续加入发货台"按钮
