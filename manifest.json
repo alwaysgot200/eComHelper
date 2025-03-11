@@ -11,21 +11,19 @@
    "content_scripts": [ {
       "all_frames": false,
       "css": [ "asset/lib/my.css" ],
-      "js": [ "asset/lib/jquery.min.js", "content.js", "inventoryManager.js", "batchShippingProcessor.js" ],
-      "matches": [ "https://kuajing.pinduoduo.com/*","https://seller.kuajingmaihuo.com/*" ]
+      "js": [ "asset/lib/jquery.min.js", "content.js", "inventoryManager.js"],
+      "matches": [ "https://seller.kuajingmaihuo.com/*" ]
    } ], 
    "content_security_policy": {
       "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src * data: blob: 'self'",
       "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self'"
    },
     "host_permissions": [      
-      "https://*.kuajingmaihuo.com/*",
-      "https://*.kuajingboss.com/*",
-      "https://*.pinduoduo.com/*"     
+      "https://*.kuajingmaihuo.com/*"    
     ],
    "description": "跨境电商助手",
    "externally_connectable": {
-      "matches": [ "*://*.kuajing.pinduoduo.com/*", "*://*.seller.kuajingmaihuo.com/*" ]
+      "matches": [ "*://*.seller.kuajingmaihuo.com/*" ]
    },
    "icons": {
       "128": "img/icon128.png",

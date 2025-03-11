@@ -7,13 +7,13 @@ let isLooping = false;
 let isLoopingv2 = false;
 
 // 配置参数
-let singleOrderLoopv2 = 3;
-let shiyan = 1200;
-let shiyan2 = 2000;
+let shiyan = 1500;
+let shiyan2 = 2500;
 let _MyInterval = null;
 let isstip = false;
 let onlyClickSelected = false;
 let buttonAdded = false; // 添加标志位
+const InValidList=[];
 
 // 添加抢库相关按钮到页面
 function addApivButton() {
@@ -243,8 +243,13 @@ function addApivButton() {
         $(".apivStockv3").html("<span>暴力<SUP>+100</SUP>抢库</span>");
         return;
       }
-      // 启动定时器开始抢库
-      _MyInterval = setInterval(run, shiyanr());
+      // 创建一个标志变量，用于跟踪页面是否刚刚刷新
+
+      saveCheckStatus();
+      _MyInterval = setInterval(async () => {
+        restoreCheckStatus();
+        await delay(50);
+        run();}, shiyanr());
       $(".apivStockv3").html("停止<span>暴力<SUP>+100</SUP>抢库</span>");
     });
 }
@@ -338,7 +343,158 @@ function bindButtonEvents() {
     $("#intpod").hide();
   });
 }
+function run() {
+  // 获取所有可加入发货台的链接
+  const addToShipButtons = [];
+  let portalElements = [];
+  const links = document
+    .querySelector('tbody[data-testid="beast-core-table-middle-tbody"]')
+    .querySelectorAll("a:not([disabled])");
+  // 筛选符合条件的按钮
+  for (const link of links) {
+    if (link.innerText === "加入发货台" ){
+      let checkbox;
+      let currentRow = link.closest("tr");
+      // 向上遍历行，直到找到包含checkbox的行
+      let orderId = "";
+      const $currentRow = $(currentRow);
+      const orderIdElement = $currentRow.find("div:contains('WB')").first();
+      if (orderIdElement.length > 0) {
+        // 使用正则表达式匹配WB开头的13位数字
+        const match = orderIdElement.text().match(/WB\d{13}/);
+        if (match) {
+          orderId = match[0];
+        }
+      }
+      if(InValidList.includes(orderId))  continue; //orderId对应的“加入发货台” 其实已经是无效的，所以要排除
+      while (currentRow) {
+        checkbox = currentRow.querySelector("input[type='checkbox']");
+        if (checkbox) break; // 找到checkbox则停止遍历
+        currentRow = currentRow.previousElementSibling;
+      }
+      if (onlyClickSelected) {
+        if (checkbox && checkbox.checked) {
+          addToShipButtons.push(link);
+        }
+      } else {
+        addToShipButtons.push(link);
+      }
+    }
+  }
+  // 执行加入发货台操作
+    (async function processButtons() {
+    for (let i = 0; i < addToShipButtons.length; i++) {
+      // 点击按钮
+      addToShipButtons[i].click(); 
+      await delay(50);     
+      // 获取弹窗元素
+      portalElements = document.querySelectorAll('div[data-testid="beast-core-portal"]');    
+      // 只在处理最后一个按钮时处理弹窗
+      if (i == addToShipButtons.length - 1) {       
+        for (const portal of portalElements) {
+          portal.querySelector("button").click(); 
+        }
+        await delay(100);
+      }     
+      // 处理各种弹窗情况 - 拆分逻辑使其更清晰
+      await handleModals();//处理循环过程中的弹窗     
+    }
+    await delay(100);
+    await handleModals();//处理不点击按钮时的弹窗
+  })(); 
+  // 处理无可用订单的情况
+  if (addToShipButtons.length === 0) {
+    alert("没找到可用的加入发货台订单");
+    clearInterval(_MyInterval);
+    _MyInterval = null;
+    $(".apivStockv3").html("<span>暴力<sup>+100</sup>抢库</span>");
+  }
+}
+async function handleModals() {
+  // 处理"继续加入发货台"按钮
+  const continueButton = $("button:contains('继续加入发货台')");
+  if (continueButton.length > 0) {
+    continueButton.click();
+  }
 
+  // 处理"知道了"按钮和相关逻辑
+  const confirmButton = $("div[data-testid='beast-core-modal']").find("button:contains('知道了')");
+  if (confirmButton.length > 0) {
+    const modalContent = $("div[data-testid='beast-core-modal']");
+    if(modalContent.find("div:contains('当前备货单已加入发货台')").length > 0){
+      const modalText = modalContent.text();
+      const match = modalText.match(/WB\d{13}/);
+      if (match && !InValidList.includes(match[0])) {
+        InValidList.push(match[0]);
+      }
+    }
+    confirmButton.click();
+  }
+  await delay(100);
+}
+
+function saveCheckStatus(){
+  // 创建一个数组存储选中的复选框信息
+  const checkboxStates = [];
+  
+  // 查找所有表格中的复选框
+  $('tbody[data-testid="beast-core-table-middle-tbody"] input[type="checkbox"]').each(function() {
+    if ($(this).prop("checked")) {
+      // 获取复选框所在行的关键信息
+      const $row = $(this).closest("tr");
+      const rowIndex = $row.index();
+      
+      // 获取订单号或其他唯一标识符
+      let orderId = "";
+      const orderIdElement = $row.find("div:contains('WB')").first();
+      if (orderIdElement.length > 0) {
+        // 使用正则表达式匹配WB开头的13位数字
+        const match = orderIdElement.text().match(/WB\d{13}/);
+        if (match) {
+          orderId = match[0];
+        }
+      }      
+      // 保存复选框信息
+      checkboxStates.push({
+        rowIndex: rowIndex,
+        orderId: orderId
+      });
+    }
+  });  
+  // 保存到localStorage
+  if(checkboxStates.length>0){
+    localStorage.setItem('eComHelperCheckboxStates', JSON.stringify(checkboxStates));
+    console.log(`已保存${checkboxStates.length}个选中状态`);
+  } 
+  return checkboxStates;
+}
+function restoreCheckStatus(){
+  // 从localStorage获取保存的状态
+  const savedStates = JSON.parse(localStorage.getItem('eComHelperCheckboxStates') || '[]');
+  
+  if (savedStates.length === 0) {
+    console.log("没有找到保存的复选框状态");
+    return false;
+  }
+  
+  let restoredCount = 0;
+  
+  // 遍历所有保存的状态
+  savedStates.forEach(state => {
+    // 通过订单号查找对应行
+    if (state.orderId) {
+      $(`tbody[data-testid="beast-core-table-middle-tbody"] tr`).each(function() {
+        if ($(this).text().includes(state.orderId)) {
+          $(this).find('input[type="checkbox"]').prop("checked", true).change();
+          restoredCount++;
+          return false; // 跳出each循环
+        }
+      });
+    }
+  });  
+  console.log(`已恢复${restoredCount}/${savedStates.length}个复选框状态`);
+  return restoredCount > 0;
+}
 // 初始化系统
 getMallid(() => {});
 getAntiContent();

@@ -312,8 +312,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   
   // 根据URL控制抢库按钮显示
   const validUrls = [
-    "kuajing.pinduoduo.com/main/order-manage-urgency",
-    "kuajing.pinduoduo.com/main/order-manage",
     "seller.kuajingmaihuo.com/main/order-manage-urgency",
     "seller.kuajingmaihuo.com/main/order-manage"
   ];
